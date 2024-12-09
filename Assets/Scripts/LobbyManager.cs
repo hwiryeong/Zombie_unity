@@ -20,6 +20,7 @@ public class LobbyManager : MonoBehaviourPunCallbacks {
 
     public Text connectionInfoText; // 네트워크 정보를 표시할 텍스트
     public Button joinButton; // 룸 접속 버튼
+    public Button startButton;
 
     // 게임 실행과 동시에 마스터 서버 접속 시도
     private void Start() {
@@ -27,7 +28,7 @@ public class LobbyManager : MonoBehaviourPunCallbacks {
         PhotonNetwork.GameVersion = gameVersion;
         // 설정한 정보를 가지고 마스터 서버 접속 시도
         PhotonNetwork.ConnectUsingSettings();
-
+        startButton.interactable = true;
         // 룸 접속 버튼을 잠시 비활성화
         joinButton.interactable = false;
         // 접속을 시도 중임을 텍스트로 표시
@@ -38,7 +39,9 @@ public class LobbyManager : MonoBehaviourPunCallbacks {
     public override void OnConnectedToMaster() {
         // 룸 접속 버튼을 활성화
         joinButton.interactable = true;
-        // 접속 정보 표시
+        // 접속 정보 표시\ \
+        PhotonNetwork.JoinLobby();
+        Debug.Log("로비에 연결됨");
         connectionInfoText.text = "온라인 : 마스터 서버와 연결됨";
     }
 
@@ -84,15 +87,20 @@ public class LobbyManager : MonoBehaviourPunCallbacks {
         PhotonNetwork.NickName = user_id.text;
         PlayerPrefs.SetString("USER_ID",user_id.text);
 
+        /*
         RoomOptions roomOptions = new RoomOptions();
         roomOptions.IsOpen = true;
         roomOptions.IsVisible = true;
         roomOptions.MaxPlayers = 4;//나중에 수정 가능
         PhotonNetwork.CreateRoom(room_name, roomOptions, TypedLobby.Default);
+        */
+        PhotonNetwork.CreateRoom(room_name, new RoomOptions { MaxPlayers = 4 });
+
     }
     public override void OnCreateRoomFailed(short returnCode, string message)
     {
         Debug.Log("방 만들기 실패 : " + message);
+
     }
 
 
@@ -119,7 +127,69 @@ public class LobbyManager : MonoBehaviourPunCallbacks {
             Debug.LogError($"알 수 없는 오류 발생: {message}");
         }
     }
+    public override void OnRoomListUpdate(List<RoomInfo> roomList)
+    {
+        Debug.Log("룸리스트 업데이트 호출");
+        GameObject tempRoom = null;
+        foreach (var roomInfo in roomList)
+        {
+            if (roomInfo.RemovedFromList == true)
+            {  // 룸이 삭제된 경우
+                // 딕셔너리에서 룸 이름으로 검색해 저장된 RoomItem 프리팹를 추출
+                rooms.TryGetValue(roomInfo.Name, out tempRoom);
+                Destroy(tempRoom); // RoomItem 프리팹 삭제        
+                rooms.Remove(roomInfo.Name); // 딕셔너리에서 해당 룸 이름의 데이터를 삭제
+                                             //GridLayoutGroup의 constraintCount 값을 RoomItem 갯수만큼 증가
+                scrollContents.GetComponent<GridLayoutGroup>().constraintCount = rooms.Count;
+                scrollContents.GetComponent<RectTransform>().sizeDelta -= new Vector2(0, 20);
+            }
+            else // 룸 정보가 변경된 경우
+            {
+                // 룸 이름이 딕셔너리에 없는 경우 새로 추가
+                if (rooms.ContainsKey(roomInfo.Name) == false)
+                {
+                    GameObject room = (GameObject)Instantiate(roomItem); //RoomItem 프리팹 동적 생성
+                    room.transform.SetParent(scrollContents.transform, false); // RoomItem을 scrollContents의 자식으로 설정
 
+                    RoomData roomData = room.GetComponent<RoomData>();
+                    roomData.roomName = roomInfo.Name; //방제목
+                    roomData.connectPlayer = roomInfo.PlayerCount; //현재인원수
+                    roomData.maxPlayer = roomInfo.MaxPlayers; //최대인원수
+                    roomData.DispRoomData();//텍스트 정보 표시
+
+                    roomData.GetComponent<UnityEngine.UI.Button>().onClick.AddListener(delegate
+                    {
+                        onClickRoom(roomData.roomName);
+                    });
+
+                    // 딕셔너리 자료형에 데이터 추가
+                    rooms.Add(roomInfo.Name, room);
+                    //GridLayoutGroup의 constraintCount 값을 RoomItem 갯수만큼 증가
+                    scrollContents.GetComponent<GridLayoutGroup>().constraintCount = rooms.Count;
+                    //스크롤 영역의 높이를 증가
+                    scrollContents.GetComponent<RectTransform>().sizeDelta += new Vector2(0, 20);
+                }
+                else // 룸 이름이 딕셔너리에 없는 경우에 룸 정보를 갱신
+                {
+                    rooms.TryGetValue(roomInfo.Name, out tempRoom); //룸검색해 RoomItem을 tempRoom에 저장
+
+                    RoomData roomData = tempRoom.GetComponent<RoomData>();
+                    roomData.roomName = roomInfo.Name; //방제목
+                    roomData.connectPlayer = roomInfo.PlayerCount; //현재인원수
+                    roomData.maxPlayer = roomInfo.MaxPlayers; //최대인원수
+                    roomData.DispRoomData();//텍스트 정보 표시
+                }
+            }
+        }//foreach종료
+    }//방 목록 업데이트 콜백함수 종료
+
+
+    public void onClickRoom(string roomName)//방 목록 클릭시 해당 방으로 접속 (팝업을 할까?)
+    {
+        PhotonNetwork.NickName = user_id.text; //방 접속한 플레이어 이름 설정
+        PlayerPrefs.SetString("USER_ID", user_id.text); // 플레이어 이름 저장
+        PhotonNetwork.JoinRoom(roomName); // 방 제목으로 방 입장
+    }
     // 룸에 참가 완료된 경우 자동 실행
     public override void OnJoinedRoom() {
         // 접속 상태 표시
