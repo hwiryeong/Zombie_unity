@@ -204,6 +204,18 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 309232266}
   m_CullTransparentMesh: 1
+--- !u!114 &495073927 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 1577431550, guid: 63226789a2ac34fec8493b064c47bd44,
+    type: 3}
+  m_PrefabInstance: {fileID: 842842329}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a4db7a114972834c8e4117be1d82ba3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1001 &708139771
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -675,7 +687,7 @@ MonoBehaviour:
     ModeOverride: 0
     LensShift: {x: 0, y: 0}
     GateFit: 2
-    m_SensorSize: {x: 2.3960574, y: 1}
+    m_SensorSize: {x: 2.2133722, y: 1}
   m_Transitions:
     m_BlendHint: 0
     m_InheritPosition: 0
@@ -923,6 +935,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e090a9750849f49c282494b652e54999, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  textLog: {fileID: 309232268}
   playerPrefab: {fileID: 2639290364562494262, guid: 1aca5c3ed49b3426e8818a6b9f424f62,
     type: 3}
 --- !u!4 &1370410591
@@ -989,7 +1002,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   scrollRect: {fileID: 842842336}
-  verticalScrollbar: {fileID: 0}
+  verticalScrollbar: {fileID: 495073927}
 --- !u!1 &1421313824
 GameObject:
   m_ObjectHideFlags: 0
@@ -1007,7 +1020,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &1421313825
 MonoBehaviour:
   m_ObjectHideFlags: 0

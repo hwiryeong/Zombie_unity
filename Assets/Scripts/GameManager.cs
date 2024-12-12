@@ -1,6 +1,9 @@
 ﻿using Photon.Pun;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+using WebSocketSharp;
 
 // 점수와 게임 오버 여부, 게임 UI를 관리하는 게임 매니저
 public class GameManager : MonoBehaviourPunCallbacks, IPunObservable {
@@ -20,7 +23,8 @@ public class GameManager : MonoBehaviourPunCallbacks, IPunObservable {
             return m_instance;
         }
     }
-
+    private PhotonView pv;
+    public Text textLog;
     private static GameManager m_instance; // 싱글톤이 할당될 static 변수
 
     public GameObject playerPrefab; // 생성할 플레이어 캐릭터 프리팹
@@ -55,10 +59,17 @@ public class GameManager : MonoBehaviourPunCallbacks, IPunObservable {
             // 자신을 파괴
             Destroy(gameObject);
         }
+        if (pv == null)
+            pv = GetComponent<PhotonView>();
+        else
+            ;
     }
 
+
+
+
     // 게임 시작과 동시에 플레이어가 될 게임 오브젝트를 생성
-    private void Start() {
+    IEnumerator Start() {
         // 생성할 랜덤 위치 지정
         Vector3 randomSpawnPos = Random.insideUnitSphere * 5f;
         // 위치 y값은 0으로 변경
@@ -67,6 +78,24 @@ public class GameManager : MonoBehaviourPunCallbacks, IPunObservable {
         // 네트워크 상의 모든 클라이언트들에서 생성 실행
         // 단, 해당 게임 오브젝트의 주도권은, 생성 메서드를 직접 실행한 클라이언트에게 있음
         PhotonNetwork.Instantiate(playerPrefab.name, randomSpawnPos, Quaternion.identity);
+
+        string msg = "<color=#00ff00>[" + PhotonNetwork.NickName + "] Connected" + "</color>";
+        pv.RPC("LogMsg", RpcTarget.AllBuffered, msg);
+        //룸에 있는 네트워크 객체 간 통신이 완료될 때까지 잠시 대기
+        yield return new WaitForSeconds(1.0f);
+        //SetConnectPlayerScore(); //모든 탱크의 스코어 점수를 표시
+        
+    }
+    [PunRPC]
+    public void LogMsg(string msg)
+    {
+        if(textLog.text.IsNullOrEmpty())
+            textLog.text = msg;
+        else
+        {
+            textLog.text = textLog.text +"\n"+ msg;
+        }
+        
     }
 
     // 점수를 추가하고 UI 갱신
@@ -78,8 +107,11 @@ public class GameManager : MonoBehaviourPunCallbacks, IPunObservable {
             score += newScore;
             // 점수 UI 텍스트 갱신
             UIManager.instance.UpdateScoreText(score);
+
         }
     }
+
+
 
     // 게임 오버 처리
     public void EndGame() {
@@ -93,6 +125,8 @@ public class GameManager : MonoBehaviourPunCallbacks, IPunObservable {
     private void Update() {
         if (Input.GetKeyDown(KeyCode.Escape))
         {
+            string msg = "<color=#ff0000>[" + PhotonNetwork.NickName + "] Disconnected" + "</color>";
+            pv.RPC("LogMsg", RpcTarget.AllBuffered, msg);
             PhotonNetwork.LeaveRoom();
         }
     }
@@ -100,6 +134,10 @@ public class GameManager : MonoBehaviourPunCallbacks, IPunObservable {
     // 룸을 나갈때 자동 실행되는 메서드
     public override void OnLeftRoom() {
         // 룸을 나가면 로비 씬으로 돌아감
+
+
         SceneManager.LoadScene("Lobby");
     }
+
+
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using Photon.Pun;
+using Photon.Realtime;
 using UnityEngine;
 
 // 생명체로서 동작할 게임 오브젝트들을 위한 뼈대를 제공
@@ -29,7 +30,7 @@ public class LivingEntity : MonoBehaviourPun, IDamageable {
     // 데미지 처리
     // 호스트에서 먼저 단독 실행되고, 호스트를 통해 다른 클라이언트들에서 일괄 실행됨
     [PunRPC]
-    public virtual void OnDamage(float damage, Vector3 hitPoint, Vector3 hitNormal) {
+    public virtual void OnDamage(float damage, Vector3 hitPoint, Vector3 hitNormal) {//플레이어가 데미지를 입을때
         if (PhotonNetwork.IsMasterClient)
         {
             // 데미지만큼 체력 감소
@@ -47,6 +48,64 @@ public class LivingEntity : MonoBehaviourPun, IDamageable {
         {
             Die();
         }
+    }
+
+    [PunRPC]
+    public virtual void OnDamage(float damage, Vector3 hitPoint, Vector3 hitNormal, int ViewID)
+    {
+        if (PhotonNetwork.IsMasterClient)
+        {
+            // 데미지만큼 체력 감소
+            health -= damage;
+            PhotonView attackerView = PhotonView.Find(ViewID);
+            if (attackerView != null)
+            {
+                Person_data player = attackerView.GetComponent<Person_data>();
+                if (player != null)
+                {
+                    player.AddDamage((int)damage);
+                    Debug.Log("플레이어한테 딜량 누적");
+                }
+                else
+                {
+                    Debug.Log("플레이어 데이터 없음");
+                }
+            }
+            // 호스트에서 클라이언트로 동기화
+            photonView.RPC("ApplyUpdatedHealth", RpcTarget.Others, health, dead);
+
+            // 다른 클라이언트들도 OnDamage를 실행하도록 함
+            photonView.RPC("OnDamage", RpcTarget.Others, damage, hitPoint, hitNormal);
+        }
+
+        // 체력이 0 이하 && 아직 죽지 않았다면 사망 처리 실행
+        if (health <= 0 && !dead)
+        {
+            Die(ViewID);
+        }
+    }
+
+    public virtual void Die(int ViewID)//좀비가 호출할 Die()함수
+    {
+        PhotonView attackerView = PhotonView.Find(ViewID);
+        if(attackerView != null)
+        {
+            Person_data player = attackerView.GetComponent<Person_data>();
+            if(player != null)
+            {
+                player.AddKill();
+                Debug.Log("킬수 증가");
+            }
+        }
+        // onDeath 이벤트에 등록된 메서드가 있다면 실행
+        if (onDeath != null)
+        {
+            onDeath();
+        }
+
+
+        // 사망 상태를 참으로 변경
+        dead = true;
     }
 
 
@@ -82,4 +141,6 @@ public class LivingEntity : MonoBehaviourPun, IDamageable {
         // 사망 상태를 참으로 변경
         dead = true;
     }
+
+
 }

@@ -31,6 +31,9 @@ public class Gun : MonoBehaviourPun, IPunObservable {
 
     private float lastFireTime; // 총을 마지막으로 발사한 시점
 
+    public PhotonView player_PhotonView;
+
+
     // 주기적으로 자동 실행되는, 동기화 메서드
     public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info) {
         // 로컬 오브젝트라면 쓰기 부분이 실행됨
@@ -128,14 +131,16 @@ public class Gun : MonoBehaviourPun, IPunObservable {
             // 레이가 어떤 물체와 충돌한 경우
 
             // 충돌한 상대방으로부터 IDamageable 오브젝트를 가져오기 시도
-            IDamageable target =
-                hit.collider.GetComponent<IDamageable>();
+            Zombie target =
+                hit.collider.GetComponent<Zombie>();
 
             // 상대방으로 부터 IDamageable 오브젝트를 가져오는데 성공했다면
             if (target != null)
             {
                 // 상대방의 OnDamage 함수를 실행시켜서 상대방에게 데미지 주기
-                target.OnDamage(gunData.damage, hit.point, hit.normal);
+                target.OnDamage(gunData.damage, hit.point, hit.normal, player_PhotonView.ViewID);
+                Debug.Log(player_PhotonView.ViewID);
+                Debug.Log("건 스크립트의 온데미지 호출");
             }
 
             // 레이가 충돌한 위치 저장

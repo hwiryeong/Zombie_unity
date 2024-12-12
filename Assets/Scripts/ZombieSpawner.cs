@@ -19,6 +19,7 @@ public class ZombieSpawner : MonoBehaviourPun, IPunObservable {
 
     // 주기적으로 자동 실행되는, 동기화 메서드
     public void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info) {
+
         // 로컬 오브젝트라면 쓰기 부분이 실행됨
         if (stream.IsWriting)
         {
@@ -36,6 +37,7 @@ public class ZombieSpawner : MonoBehaviourPun, IPunObservable {
             wave = (int) stream.ReceiveNext();
         }
     }
+
 
     private void Awake() {
         PhotonPeer.RegisterType(typeof(Color), 128, ColorSerialization.SerializeColor,
@@ -111,7 +113,7 @@ public class ZombieSpawner : MonoBehaviourPun, IPunObservable {
         Zombie zombie = createdZombie.GetComponent<Zombie>();
 
         // 생성한 좀비의 능력치 설정
-        zombie.photonView.RPC("Setup", RpcTarget.All, zombieData.health, zombieData.damage, zombieData.speed, zombieData.skinColor);
+        zombie.photonView.RPC("Setup", RpcTarget.AllBuffered, zombieData.health, zombieData.damage, zombieData.speed, zombieData.skinColor);
 
         // 생성된 좀비를 리스트에 추가
         zombies.Add(zombie);

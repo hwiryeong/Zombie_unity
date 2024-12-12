@@ -135,7 +135,7 @@ public class Zombie : LivingEntity {
 
     // 데미지를 입었을때 실행할 처리
     [PunRPC]
-    public override void OnDamage(float damage, Vector3 hitPoint, Vector3 hitNormal) {
+    public override void OnDamage(float damage, Vector3 hitPoint, Vector3 hitNormal, int ViewID) {
         // 아직 사망하지 않은 경우에만 피격 효과 재생
         if (!dead)
         {
@@ -149,13 +149,13 @@ public class Zombie : LivingEntity {
         }
 
         // LivingEntity의 OnDamage()를 실행하여 데미지 적용
-        base.OnDamage(damage, hitPoint, hitNormal);
+        base.OnDamage(damage, hitPoint, hitNormal, ViewID);
     }
 
     // 사망 처리
-    public override void Die() {
+    public override void Die(int ViewID) {
         // LivingEntity의 Die()를 실행하여 기본 사망 처리 실행
-        base.Die();
+        base.Die(ViewID);
 
         // 다른 AI들을 방해하지 않도록 자신의 모든 콜라이더들을 비활성화
         Collider[] zombieColliders = GetComponents<Collider>();
@@ -187,8 +187,8 @@ public class Zombie : LivingEntity {
         if (!dead && Time.time >= lastAttackTime + timeBetAttack)
         {
             // 상대방으로부터 LivingEntity 타입을 가져오기 시도
-            LivingEntity attackTarget
-                = other.GetComponent<LivingEntity>();
+            PlayerHealth attackTarget
+                = other.GetComponent<PlayerHealth>();
 
             // 상대방의 LivingEntity가 자신의 추적 대상이라면 공격 실행
             if (attackTarget != null && attackTarget == targetEntity)

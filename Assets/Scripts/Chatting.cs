@@ -1,9 +1,5 @@
 using Photon.Pun;
-using System;
 using System.Collections;
-using System.Collections.Generic;
-using UnityEditor.UI;
-using UnityEditor.VersionControl;
 using UnityEngine;
 using UnityEngine.UI;
 using WebSocketSharp;
@@ -32,6 +28,8 @@ public class Chatting : MonoBehaviour
     {
         if (pv == null)
             Debug.Log("포톤뷰가 널");
+
+
         if (Input.GetKeyDown(KeyCode.Return))
         {
             Debug.Log("업데이트 함수 호출");
@@ -56,8 +54,8 @@ public class Chatting : MonoBehaviour
 
         if(!string.IsNullOrEmpty(chat.text))
         {
-            string message = "<color=#00ff00>" +
-             PhotonNetwork.NickName + " : " + this.chat.text +"</color>";
+            string message = "<color=#000000>" +
+             "["+PhotonNetwork.NickName +"] "+" : " + this.chat.text +"</color>";
 
             Debug.Log(message+"   메세지"+PhotonNetwork.NickName);
 
